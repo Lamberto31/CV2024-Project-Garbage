@@ -42,22 +42,22 @@ class CustomImageDataset(Dataset):
       self.target_transform = target_transform
 
     def __len__(self):
-      return len(self.img_labels)
+      return len(self.imgs_labels)
 
     def __getitem__(self, idx):
-      # Create image path using imgs_dir and img_name from img_labels
+      # Create image path using imgs_dir and img_name from imgs_labels
       img_name = self.imgs_labels.iloc[idx, 0]
       img_path = os.path.join(self.imgs_dir, img_name)
       # Read image file
       img_file = read_image(img_path)
       # Get image label
-      label = self.img_labels.iloc[idx, 1]
+      label = self.imgs_labels.iloc[idx, 1]
       # Apply transformations
       if self.transform:
         img_file = self.transform(img_file)
       if self.target_transform:
         label = self.target_transform(label)
       # Build image dictionary and return
-      image = {"name": self.img_labels.iloc[idx,0],
+      image = {"name": self.imgs_labels.iloc[idx,0],
                "file": img_file}
       return image, label
