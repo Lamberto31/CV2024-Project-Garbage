@@ -3,6 +3,28 @@ import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
 
+import cv2
+import numpy as np
+
+def np_img_read(filename, resize = True, resize_height = 256, resize_width = 256):
+    """
+    Load image and convert it to numpy.ndarray. Notes that the color channels are BGR and the color space
+    is normalized from [0, 255] to [-1, 1].
+
+    :param filename: the full path of image
+    :param resize: whether to resize the image or not
+    :param resize_height: resized height
+    :param resize_width: resized width
+    :return: numpy.ndarray
+    """
+
+    image_decoded = cv2.imread(filename)
+    if resize:
+        image_decoded = cv2.resize(image_decoded, (resize_width, resize_height))
+    image_decoded = image_decoded.astype(dtype=np.float32)
+    image_decoded = (image_decoded / 127.5) - 1.0
+    return image_decoded
+
 class CustomImageDataset(Dataset):
     """
     Customized dataset for image classification. It reads image file paths and labels from a csv file and loads
@@ -12,7 +34,7 @@ class CustomImageDataset(Dataset):
     :param target_transform: transformation to apply to the labels
     :return: a dataset object with iterable image dictionary (name and file) and label pairs
     """
-    
+
     def __init__(self, labels_file, imgs_dir, transform=None, target_transform=None):
       self.imgs_labels = pd.read_csv(labels_file)
       self.imgs_dir = imgs_dir
