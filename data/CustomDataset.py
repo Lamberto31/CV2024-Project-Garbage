@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
-
+import glob
 import cv2
 import numpy as np
 
@@ -40,6 +40,17 @@ class CustomImageDataset(Dataset):
       self.imgs_dir = imgs_dir
       self.transform = transform
       self.target_transform = target_transform
+      self.adjust_label()
+    
+    def adjust_label(self):
+        # This function removes rows from the dataframe that do not have corresponding image files
+        # Create a list of image names
+        img_names = [os.path.basename(img) for img in glob.glob(self.imgs_dir + "/*")]
+        # Remove dataframe rows with image names not in the list
+        self.imgs_labels = self.imgs_labels[self.imgs_labels.iloc[:, 0].isin(img_names)]
+        # Check if the number of images is equal to the number of labels
+        assert len(self.imgs_labels) == len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
+
 
     def __len__(self):
       return len(self.imgs_labels)
@@ -50,6 +61,7 @@ class CustomImageDataset(Dataset):
       img_path = os.path.join(self.imgs_dir, img_name)
       # Read image file
       img_file = read_image(img_path)
+      #img_file = np_img_read(img_path)
       # Get image label
       label = self.imgs_labels.iloc[idx, 1]
       # Apply transformations
