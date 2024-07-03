@@ -60,8 +60,8 @@ class CustomImageDataset(Dataset):
       img_name = self.imgs_labels.iloc[idx, 0]
       img_path = os.path.join(self.imgs_dir, img_name)
       # Read image file
-      img_file = read_image(img_path)
-      #img_file = np_img_read(img_path)
+      #img_file = read_image(img_path)
+      img_file = np_img_read(img_path)
       # Get image label
       label = self.imgs_labels.iloc[idx, 1]
       # Apply transformations
