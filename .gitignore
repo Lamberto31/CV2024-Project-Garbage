@@ -1,5 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
+# Jupyter Notebook
+.ipynb_checkpoints/
+
 # Dataset
 dataset/
+
+# Trained models
+model/trained/
