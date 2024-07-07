@@ -25,6 +25,26 @@ def np_img_read(filename, resize = True, resize_height = 256, resize_width = 256
     image_decoded = (image_decoded / 127.5) - 1.0
     return image_decoded
 
+def create_img_to_show(img_file, show_shapes=False):
+    """
+    Prepare an image to be shown with matplotlib. The output is a numpy.ndarray with RGB color space.
+    The provided img_file is a ready to use tensor for the model (as input or output).
+    :param img_file: the image tensor. Shape: (C, H, W), color space: BGR, normalized: [-1, 1]
+    :param show_shapes: whether to print the shapes of the image tensor or not
+    :return: numpy.ndarray
+    """
+    # Create img_to_show
+    img_to_show = img_file
+    # Permute the image from (C, H, W) to (H, W, C)
+    if show_shapes: print(img_to_show.shape)
+    img_to_show = img_to_show.permute(1, 2, 0)
+    if show_shapes: print(img_to_show.shape)
+    # Convert the image from tensor to numpy array
+    img_to_show = img_to_show.numpy()
+    # Adapt BGR to RGB for matplotlib
+    img_to_show = cv2.cvtColor(img_to_show, cv2.COLOR_BGR2RGB)
+    return img_to_show
+
 class CustomImageDataset(Dataset):
     """
     Customized dataset for image classification. It reads image file paths and labels from a csv file and loads
@@ -73,3 +93,17 @@ class CustomImageDataset(Dataset):
       image = {"name": self.imgs_labels.iloc[idx,0],
                "file": img_file}
       return image, label
+    
+    def get_img_by_name(self, img_name):
+        # Get image by name
+        img_path = os.path.join(self.imgs_dir, img_name)
+        # Read image file
+        img_file = np_img_read(img_path)
+        # Get image label
+        label = self.imgs_labels[self.imgs_labels.iloc[:, 0] == img_name].iloc[0, 1]
+        # Apply transformations
+        if self.transform:
+          img_file = self.transform(img_file)
+        if self.target_transform:
+          label = self.target_transform(label)
+        return img_file
