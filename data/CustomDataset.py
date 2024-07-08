@@ -67,6 +67,22 @@ def augment_dataset(dataset, augmentation_transform_list):
     augmented_dataset = ConcatDataset(dataset_list)
     return augmented_dataset, augmentation_dict
 
+def show_augmented_dataset_info(augmented_dataset, augmentation_dict):
+    """
+    Show information of the augmented dataset.
+    :param augmented_dataset: the augmented dataset
+    :param augmentation_dict: a dictionary that maps the name of the augmentation to the index of the transformed dataset in the ConcatDataset.datasets list and the transform
+    """
+    assert isinstance(augmented_dataset, ConcatDataset), "Input is not a ConcatDataset"
+    assert len(augmented_dataset.datasets) == len(augmentation_dict), "Number of augmentations and datasets do not match"
+    print("Augmented dataset info:")
+    print("Number of augmentations: ", len(augmented_dataset.datasets) - 1)
+    for key in augmentation_dict:
+        print("Augmentation: ", key)
+        print("Index: ", augmentation_dict[key]["index"])
+        print("Transform: ", augmentation_dict[key]["transform"])
+        print("Number of images: ", len(augmented_dataset.datasets[augmentation_dict[key]["index"]]))
+        print("")
 
 class CustomImageDataset(Dataset):
     """
