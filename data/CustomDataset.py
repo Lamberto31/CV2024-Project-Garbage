@@ -56,11 +56,11 @@ def augment_dataset(dataset, augmentation_transform_list):
     """
     dataset_list = [dataset]
     augmentation_dict = {}
-    augmentation_dict["original"] = {"index": 0, "transform": dataset.transform}
+    augmentation_dict[dataset.transform_name] = {"index": 0, "transform": dataset.transform}
     for augmentation_transform_dict in augmentation_transform_list:
         augmentation_name = augmentation_transform_dict["name"]
         augmentation_transform = augmentation_transform_dict["transform"]
-        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, use_cv2=True)
+        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
         dataset_list.append(transformed_dataset)
         augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
     
@@ -95,11 +95,12 @@ class CustomImageDataset(Dataset):
     :return: a dataset object with iterable image dictionary (name and file) and label pairs
     """
 
-    def __init__(self, labels_file, imgs_dir, transform=None, target_transform=None, use_cv2=False):
+    def __init__(self, labels_file, imgs_dir, transform=None, transform_name = "none", target_transform=None, use_cv2=False):
       self.label_file = labels_file
       self.imgs_labels = pd.read_csv(labels_file)
       self.imgs_dir = imgs_dir
       self.transform = transform
+      self.transform_name = transform_name
       self.target_transform = target_transform
       self.use_cv2 = use_cv2
       self.cv2_resize = {"resize": True, "resize_height": 256, "resize_width": 256}
