@@ -60,7 +60,7 @@ def augment_dataset(dataset, augmentation_transform_list):
     for augmentation_transform_dict in augmentation_transform_list:
         augmentation_name = augmentation_transform_dict["name"]
         augmentation_transform = augmentation_transform_dict["transform"]
-        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.dataset_dir, augmentation_transform, use_cv2=True)
+        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, use_cv2=True)
         dataset_list.append(transformed_dataset)
         augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
     
@@ -96,6 +96,7 @@ class CustomImageDataset(Dataset):
     """
 
     def __init__(self, labels_file, imgs_dir, transform=None, target_transform=None, use_cv2=False):
+      self.label_file = labels_file
       self.imgs_labels = pd.read_csv(labels_file)
       self.imgs_dir = imgs_dir
       self.transform = transform
