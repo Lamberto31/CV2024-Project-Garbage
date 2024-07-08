@@ -46,43 +46,57 @@ def create_img_to_show(img_file, show_shapes=False):
     img_to_show = cv2.cvtColor(img_to_show, cv2.COLOR_BGR2RGB)
     return img_to_show
 
-def augment_dataset(dataset, augmentation_transform_list):
+def augment_dataset(dataset, augmentation_transform_list, create_dict = False):
     """
     Augment the dataset with the provided augmentation transforms list.
     :param dataset: the dataset to be augmented
     :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation and the transform
+    :param create_dict: whether to create the augmentation_dict or not
     :return: the augmented dataset 
-    :return: a dictionary that maps the name of the augmentation to the index of the transformed dataset in the ConcatDataset.datasets list and the transform
+    :return: if create_dict is true,
+      a dictionary that maps the name of the augmentation to the index of the transformed dataset in the ConcatDataset.datasets list and the transform
     """
     dataset_list = [dataset]
-    augmentation_dict = {}
-    augmentation_dict[dataset.transform_name] = {"index": 0, "transform": dataset.transform}
+    if create_dict:
+      augmentation_dict = {}
+      augmentation_dict[dataset.transform_name] = {"index": 0, "transform": dataset.transform}
     for augmentation_transform_dict in augmentation_transform_list:
-        augmentation_name = augmentation_transform_dict["name"]
-        augmentation_transform = augmentation_transform_dict["transform"]
-        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
-        dataset_list.append(transformed_dataset)
+      augmentation_name = augmentation_transform_dict["name"]
+      augmentation_transform = augmentation_transform_dict["transform"]
+      transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
+      dataset_list.append(transformed_dataset)
+      if create_dict:
         augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
     
     augmented_dataset = ConcatDataset(dataset_list)
-    return augmented_dataset, augmentation_dict
+    if create_dict: return augmented_dataset, augmentation_dict
+    return augmented_dataset
 
-def show_augmented_dataset_info(augmented_dataset, augmentation_dict):
+def show_augmented_dataset_info(augmented_dataset, augmentation_dict = None):
     """
     Show information of the augmented dataset.
     :param augmented_dataset: the augmented dataset
     :param augmentation_dict: a dictionary that maps the name of the augmentation to the index of the transformed dataset in the ConcatDataset.datasets list and the transform
     """
     assert isinstance(augmented_dataset, ConcatDataset), "Input is not a ConcatDataset"
-    assert len(augmented_dataset.datasets) == len(augmentation_dict), "Number of augmentations and datasets do not match"
+    if augmentation_dict is not None:
+      assert len(augmented_dataset.datasets) == len(augmentation_dict), "Number of augmentations and datasets do not match"
     print("Augmented dataset info:")
     print("Number of augmentations: ", len(augmented_dataset.datasets) - 1)
-    for key in augmentation_dict:
-        print("Augmentation: ", key)
-        print("Index: ", augmentation_dict[key]["index"])
-        print("Transform: ", augmentation_dict[key]["transform"])
-        print("Number of images: ", len(augmented_dataset.datasets[augmentation_dict[key]["index"]]))
-        print("")
+    if augmentation_dict is not None:
+      for key in augmentation_dict:
+          print("Transform name: ", key)
+          print("Index: ", augmentation_dict[key]["index"])
+          print("Transform: ", augmentation_dict[key]["transform"])
+          print("Number of images: ", len(augmented_dataset.datasets[augmentation_dict[key]["index"]]))
+          print("")
+    else:
+      for i in range(len(augmented_dataset.datasets)):
+          print("Transform name: ", augmented_dataset.datasets[i].transform_name)
+          print("Index: ", i)
+          print("Transform: ", augmented_dataset.datasets[i].transform)
+          print("Number of images: ", len(augmented_dataset.datasets[i]))
+          print("")
 
 class CustomImageDataset(Dataset):
     """
