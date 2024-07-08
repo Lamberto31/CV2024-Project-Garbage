@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
+from torch.utils.data import ConcatDataset
 import glob
 import cv2
 import numpy as np
@@ -44,6 +45,28 @@ def create_img_to_show(img_file, show_shapes=False):
     # Adapt BGR to RGB for matplotlib
     img_to_show = cv2.cvtColor(img_to_show, cv2.COLOR_BGR2RGB)
     return img_to_show
+
+def augment_dataset(dataset, augmentation_transform_list):
+    """
+    Augment the dataset with the provided augmentation transforms list.
+    :param dataset: the dataset to be augmented
+    :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation and the transform
+    :return: the augmented dataset 
+    :return: a dictionary that maps the name of the augmentation to the index of the transformed dataset in the ConcatDataset.datasets list and the transform
+    """
+    dataset_list = [dataset]
+    augmentation_dict = {}
+    augmentation_dict["original"] = {"index": 0, "transform": dataset.transform}
+    for augmentation_transform_dict in augmentation_transform_list:
+        augmentation_name = augmentation_transform_dict["name"]
+        augmentation_transform = augmentation_transform_dict["transform"]
+        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.dataset_dir, augmentation_transform, use_cv2=True)
+        dataset_list.append(transformed_dataset)
+        augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
+    
+    augmented_dataset = ConcatDataset(dataset_list)
+    return augmented_dataset, augmentation_dict
+
 
 class CustomImageDataset(Dataset):
     """
