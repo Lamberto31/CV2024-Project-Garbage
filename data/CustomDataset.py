@@ -52,14 +52,17 @@ class CustomImageDataset(Dataset):
     :param imgs_dir: directory containing images
     :param transform: transformation to apply to the images
     :param target_transform: transformation to apply to the labels
+    :param use_cv2: whether to use cv2 to read images or not
     :return: a dataset object with iterable image dictionary (name and file) and label pairs
     """
 
-    def __init__(self, labels_file, imgs_dir, transform=None, target_transform=None):
+    def __init__(self, labels_file, imgs_dir, transform=None, target_transform=None, use_cv2=False):
       self.imgs_labels = pd.read_csv(labels_file)
       self.imgs_dir = imgs_dir
       self.transform = transform
       self.target_transform = target_transform
+      self.use_cv2 = use_cv2
+      self.cv2_resize = {"resize": True, "resize_height": 256, "resize_width": 256}
       self.adjust_label()
     
     def adjust_label(self):
@@ -70,6 +73,15 @@ class CustomImageDataset(Dataset):
         self.imgs_labels = self.imgs_labels[self.imgs_labels.iloc[:, 0].isin(img_names)]
         # Check if the number of images is equal to the number of labels
         assert len(self.imgs_labels) == len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
+    
+    def set_cv2_resize(self, resize = True, resize_height = 256, resize_width = 256):
+        # This function sets the resize parameters if use_cv2 is True
+        # Check if use_cv2 is True, else raise an error
+        assert self.use_cv2, "Use cv2 is not enabled"
+        # Set parameters in cv2_resize
+        self.cv2_resize["resize"] = resize
+        self.cv2_resize["resize_height"] = resize_height
+        self.cv2_resize["resize_width"] = resize_width
 
 
     def __len__(self):
@@ -80,8 +92,10 @@ class CustomImageDataset(Dataset):
       img_name = self.imgs_labels.iloc[idx, 0]
       img_path = os.path.join(self.imgs_dir, img_name)
       # Read image file
-      #img_file = read_image(img_path)
-      img_file = np_img_read(img_path)
+      if self.use_cv2:
+        img_file = np_img_read(img_path, self.cv2_resize["resize"], self.cv2_resize["resize_height"], self.cv2_resize["resize_width"])
+      else:
+        img_file = read_image(img_path)
       # Get image label
       label = self.imgs_labels.iloc[idx, 1]
       # Apply transformations
