@@ -3,6 +3,7 @@ import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
 from torch.utils.data import ConcatDataset
+from torch.utils.data import random_split
 import glob
 import cv2
 import numpy as np
@@ -138,7 +139,6 @@ class CustomImageDataset(Dataset):
         self.cv2_resize["resize_height"] = resize_height
         self.cv2_resize["resize_width"] = resize_width
 
-
     def __len__(self):
       return len(self.imgs_labels)
 
@@ -176,3 +176,12 @@ class CustomImageDataset(Dataset):
         if self.target_transform:
           label = self.target_transform(label)
         return img_file
+
+    def get_train_data(self, anomalous_label = 1, train_ratio = 0.8):
+        # Clone the dataset
+        train_dataset = self
+        # Get all data corresponding to non anomalous images
+        non_anomalous_data = train_dataset.imgs_labels[self.imgs_labels.iloc[:, 1] != anomalous_label]
+        # Split the data into train and test
+        train_dataset, _= random_split(train_dataset, [train_ratio, 1 - train_ratio])
+        return train_dataset
