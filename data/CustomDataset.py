@@ -3,7 +3,6 @@ import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
 from torch.utils.data import ConcatDataset
-from torch.utils.data import random_split
 import glob
 import cv2
 import numpy as np
