@@ -178,20 +178,27 @@ class CustomImageDataset(Dataset):
           label = self.target_transform(label)
         return img_file
 
-    def split_train_test(self, anomalous_label = 1, train_ratio = 0.8):
+    def split_train_test(self, anomalous_label = 1, train_ratio = 0.8, label_dir = None):
+        # Assign default label directory if not provided
+        if not label_dir:
+           label_dir = os.path.dirname(self.label_file)
         # Clone the dataset
         train_dataset = copy.deepcopy(self)
         test_dataset = copy.deepcopy(self)
         # TRAIN DATASET
         # Get all data corresponding to non anomalous images
         train_dataset.imgs_labels = train_dataset.imgs_labels[train_dataset.imgs_labels.iloc[:, 1] != anomalous_label]
-        # Split the data into train and test
+        # Create train dataset with train_ratio
         train_dataset.imgs_labels = train_dataset.imgs_labels.sample(frac = train_ratio)
         # TEST DATASET
+        # Create test dataset with the remaining data
         test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index)
         # CHECKS
         # Check if total number of images is equal to the sum of train and test images
         assert len(self.imgs_labels) == len(train_dataset.imgs_labels) + len(test_dataset.imgs_labels), "Train and test split is not correct"
         # Check if there is no overlap between train and test images
         assert not bool(set(train_dataset.imgs_labels.iloc[:,0].unique()) & set(test_dataset.imgs_labels.iloc[:,0].unique())), "Train and test images overlap"
+        # SAVE NEW LABEL FILES
+        train_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'train_labels.csv'), index = False)
+        test_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'test_labels.csv'), index = False)
         return train_dataset, test_dataset
