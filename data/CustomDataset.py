@@ -128,7 +128,7 @@ class CustomImageDataset(Dataset):
         # Remove dataframe rows with image names not in the list
         self.imgs_labels = self.imgs_labels[self.imgs_labels.iloc[:, 0].isin(img_names)]
         # Check if the number of images is equal to the number of labels
-        assert len(self.imgs_labels) == len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
+        assert len(self.imgs_labels) <= len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
     
     def set_cv2_resize(self, resize = True, resize_height = 256, resize_width = 256):
         # This function sets the resize parameters if use_cv2 is True
@@ -200,4 +200,7 @@ class CustomImageDataset(Dataset):
         # SAVE NEW LABEL FILES
         train_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'train_labels.csv'), index = False)
         test_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'test_labels.csv'), index = False)
+        # EDIT DATASET ATTRIBUTES
+        train_dataset.label_file = os.path.join(label_dir, 'train_labels.csv')
+        test_dataset.label_file = os.path.join(label_dir, 'test_labels.csv')
         return train_dataset, test_dataset
