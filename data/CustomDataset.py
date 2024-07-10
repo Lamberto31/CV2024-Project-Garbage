@@ -51,7 +51,7 @@ def augment_dataset(dataset, augmentation_transform_list, create_dict = False):
     """
     Augment the dataset with the provided augmentation transforms list.
     :param dataset: the dataset to be augmented
-    :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation and the transform
+    :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation, the transform and the number number of applications
     :param create_dict: whether to create the augmentation_dict or not
     :return: the augmented dataset 
     :return: if create_dict is true,
@@ -62,12 +62,13 @@ def augment_dataset(dataset, augmentation_transform_list, create_dict = False):
       augmentation_dict = {}
       augmentation_dict[dataset.transform_name] = {"index": 0, "transform": dataset.transform}
     for augmentation_transform_dict in augmentation_transform_list:
-      augmentation_name = augmentation_transform_dict["name"]
-      augmentation_transform = augmentation_transform_dict["transform"]
-      transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
-      dataset_list.append(transformed_dataset)
-      if create_dict:
-        augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
+      for j in range(augmentation_transform_dict["applications_number"]):
+        augmentation_name = augmentation_transform_dict["name"] + "_" + str(j)
+        augmentation_transform = augmentation_transform_dict["transform"]
+        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
+        dataset_list.append(transformed_dataset)
+        if create_dict:
+          augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
     
     augmented_dataset = ConcatDataset(dataset_list)
     if create_dict: return augmented_dataset, augmentation_dict
