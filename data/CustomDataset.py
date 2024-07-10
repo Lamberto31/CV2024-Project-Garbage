@@ -179,9 +179,13 @@ class CustomImageDataset(Dataset):
 
     def get_train_data(self, anomalous_label = 1, train_ratio = 0.8):
         # Clone the dataset
-        train_dataset = self
+        non_anomalous_dataset = self
         # Get all data corresponding to non anomalous images
-        non_anomalous_data = train_dataset.imgs_labels[self.imgs_labels.iloc[:, 1] != anomalous_label]
+        non_anomalous_dataset.imgs_labels = non_anomalous_dataset.imgs_labels[non_anomalous_dataset.imgs_labels.iloc[:, 1] != anomalous_label]
         # Split the data into train and test
-        train_dataset, _= random_split(train_dataset, [train_ratio, 1 - train_ratio])
-        return train_dataset
+        train_dataset, test_dataset = random_split(non_anomalous_dataset, [train_ratio, 1 - train_ratio])
+        # Get names of the train data
+        train_data_names = [non_anomalous_dataset.imgs_labels.iloc[i, 0] for i in train_dataset.indices]
+        # Get names of the test data
+        test_data_names = [non_anomalous_dataset.imgs_labels.iloc[i, 0] for i in test_dataset.indices]
+        return train_dataset, train_data_names, test_data_names
