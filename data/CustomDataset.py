@@ -189,4 +189,9 @@ class CustomImageDataset(Dataset):
         train_dataset.imgs_labels = train_dataset.imgs_labels.sample(frac = train_ratio)
         # TEST DATASET
         test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index)
+        # CHECKS
+        # Check if total number of images is equal to the sum of train and test images
+        assert len(self.imgs_labels) == len(train_dataset.imgs_labels) + len(test_dataset.imgs_labels), "Train and test split is not correct"
+        # Check if there is no overlap between train and test images
+        assert not bool(set(train_dataset.imgs_labels.iloc[:,0].unique()) & set(test_dataset.imgs_labels.iloc[:,0].unique())), "Train and test images overlap"
         return train_dataset, test_dataset
