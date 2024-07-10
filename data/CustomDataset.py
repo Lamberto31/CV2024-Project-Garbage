@@ -83,6 +83,8 @@ def show_augmented_dataset_info(augmented_dataset, augmentation_dict = None):
     if augmentation_dict is not None:
       assert len(augmented_dataset.datasets) == len(augmentation_dict), "Number of augmentations and datasets do not match"
     print("Augmented dataset info:")
+    print("Original dataset size: ", len(augmented_dataset.datasets[0]))
+    print("Augmented dataset size: ", len(augmented_dataset))
     print("Number of augmentations: ", len(augmented_dataset.datasets) - 1)
     if augmentation_dict is not None:
       for key in augmentation_dict:
