@@ -7,6 +7,7 @@ from torch.utils.data import random_split
 import glob
 import cv2
 import numpy as np
+import copy
 
 def np_img_read(filename, resize = True, resize_height = 256, resize_width = 256):
     """
@@ -177,15 +178,15 @@ class CustomImageDataset(Dataset):
           label = self.target_transform(label)
         return img_file
 
-    def get_train_data(self, anomalous_label = 1, train_ratio = 0.8):
+    def split_train_test(self, anomalous_label = 1, train_ratio = 0.8):
         # Clone the dataset
-        non_anomalous_dataset = self
+        train_dataset = copy.deepcopy(self)
+        test_dataset = copy.deepcopy(self)
+        # TRAIN DATASET
         # Get all data corresponding to non anomalous images
-        non_anomalous_dataset.imgs_labels = non_anomalous_dataset.imgs_labels[non_anomalous_dataset.imgs_labels.iloc[:, 1] != anomalous_label]
+        train_dataset.imgs_labels = train_dataset.imgs_labels[train_dataset.imgs_labels.iloc[:, 1] != anomalous_label]
         # Split the data into train and test
-        train_dataset, test_dataset = random_split(non_anomalous_dataset, [train_ratio, 1 - train_ratio])
-        # Get names of the train data
-        train_data_names = [non_anomalous_dataset.imgs_labels.iloc[i, 0] for i in train_dataset.indices]
-        # Get names of the test data
-        test_data_names = [non_anomalous_dataset.imgs_labels.iloc[i, 0] for i in test_dataset.indices]
-        return train_dataset, train_data_names, test_data_names
+        train_dataset.imgs_labels = train_dataset.imgs_labels.sample(frac = train_ratio)
+        # TEST DATASET
+        test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index)
+        return train_dataset, test_dataset
