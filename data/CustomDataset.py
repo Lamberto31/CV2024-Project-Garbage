@@ -51,7 +51,7 @@ def augment_dataset(dataset, augmentation_transform_list, create_dict = False):
     """
     Augment the dataset with the provided augmentation transforms list.
     :param dataset: the dataset to be augmented
-    :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation and the transform
+    :param augmentation_transform_list: a list of dictionaries containing the name of the augmentation, the transform and the number number of applications
     :param create_dict: whether to create the augmentation_dict or not
     :return: the augmented dataset 
     :return: if create_dict is true,
@@ -62,12 +62,13 @@ def augment_dataset(dataset, augmentation_transform_list, create_dict = False):
       augmentation_dict = {}
       augmentation_dict[dataset.transform_name] = {"index": 0, "transform": dataset.transform}
     for augmentation_transform_dict in augmentation_transform_list:
-      augmentation_name = augmentation_transform_dict["name"]
-      augmentation_transform = augmentation_transform_dict["transform"]
-      transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
-      dataset_list.append(transformed_dataset)
-      if create_dict:
-        augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
+      for j in range(augmentation_transform_dict["applications_number"]):
+        augmentation_name = augmentation_transform_dict["name"] + "_" + str(j)
+        augmentation_transform = augmentation_transform_dict["transform"]
+        transformed_dataset = CustomImageDataset(dataset.label_file, dataset.imgs_dir, augmentation_transform, augmentation_name, use_cv2=True)
+        dataset_list.append(transformed_dataset)
+        if create_dict:
+          augmentation_dict[augmentation_name] = {"index": len(dataset_list)-1, "transform": augmentation_transform}
     
     augmented_dataset = ConcatDataset(dataset_list)
     if create_dict: return augmented_dataset, augmentation_dict
@@ -83,6 +84,8 @@ def show_augmented_dataset_info(augmented_dataset, augmentation_dict = None):
     if augmentation_dict is not None:
       assert len(augmented_dataset.datasets) == len(augmentation_dict), "Number of augmentations and datasets do not match"
     print("Augmented dataset info:")
+    print("Original dataset size: ", len(augmented_dataset.datasets[0]))
+    print("Augmented dataset size: ", len(augmented_dataset))
     print("Number of augmentations: ", len(augmented_dataset.datasets) - 1)
     if augmentation_dict is not None:
       for key in augmentation_dict:
@@ -128,7 +131,7 @@ class CustomImageDataset(Dataset):
         # Remove dataframe rows with image names not in the list
         self.imgs_labels = self.imgs_labels[self.imgs_labels.iloc[:, 0].isin(img_names)]
         # Check if the number of images is equal to the number of labels
-        assert len(self.imgs_labels) == len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
+        assert len(self.imgs_labels) <= len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
     
     def set_cv2_resize(self, resize = True, resize_height = 256, resize_width = 256):
         # This function sets the resize parameters if use_cv2 is True
@@ -200,4 +203,7 @@ class CustomImageDataset(Dataset):
         # SAVE NEW LABEL FILES
         train_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'train_labels.csv'), index = False)
         test_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'test_labels.csv'), index = False)
+        # EDIT DATASET ATTRIBUTES
+        train_dataset.label_file = os.path.join(label_dir, 'train_labels.csv')
+        test_dataset.label_file = os.path.join(label_dir, 'test_labels.csv')
         return train_dataset, test_dataset
