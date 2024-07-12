@@ -180,30 +180,39 @@ class CustomImageDataset(Dataset):
           label = self.target_transform(label)
         return img_file
 
-    def split_train_test(self, anomalous_label = 1, train_ratio = 0.8, label_dir = None):
+    def split_train_validation_test(self, anomalous_label = 1, train_ratio = 0.8, validation_ratio = 0.1, label_dir = None):
         # Assign default label directory if not provided
         if not label_dir:
            label_dir = os.path.dirname(self.label_file)
         # Clone the dataset
         train_dataset = copy.deepcopy(self)
+        validation_dataset = copy.deepcopy(self)
         test_dataset = copy.deepcopy(self)
         # TRAIN DATASET
         # Get all data corresponding to non anomalous images
         train_dataset.imgs_labels = train_dataset.imgs_labels[train_dataset.imgs_labels.iloc[:, 1] != anomalous_label]
         # Create train dataset with train_ratio
         train_dataset.imgs_labels = train_dataset.imgs_labels.sample(frac = train_ratio)
+        # VALIDATION DATASET
+        # Compute validation ratio on the remaining part of dataset
+        validation_test_ratio = 1 - train_ratio
+        validation_ratio_remaining = validation_ratio / validation_test_ratio
+        # Create validation dataset with validation_ratio on the remaining part of dataset
+        validation_dataset.imgs_labels = validation_dataset.imgs_labels.drop(train_dataset.imgs_labels.index).sample(frac = validation_ratio_remaining)
         # TEST DATASET
         # Create test dataset with the remaining data
-        test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index)
+        test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index).drop(validation_dataset.imgs_labels.index)
         # CHECKS
         # Check if total number of images is equal to the sum of train and test images
-        assert len(self.imgs_labels) == len(train_dataset.imgs_labels) + len(test_dataset.imgs_labels), "Train and test split is not correct"
+        assert len(self.imgs_labels) == len(train_dataset.imgs_labels) + len(validation_dataset.imgs_labels) + len(test_dataset.imgs_labels), "Train, validation and test split is not correct"
         # Check if there is no overlap between train and test images
-        assert not bool(set(train_dataset.imgs_labels.iloc[:,0].unique()) & set(test_dataset.imgs_labels.iloc[:,0].unique())), "Train and test images overlap"
+        assert not bool(set(train_dataset.imgs_labels.iloc[:,0].unique()) & set(validation_dataset.imgs_labels.iloc[:,0].unique()) & set(test_dataset.imgs_labels.iloc[:,0].unique())), "Train, validation and test images overlap"
         # SAVE NEW LABEL FILES
         train_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'train_labels.csv'), index = False)
+        validation_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'validation_labels.csv'), index = False)
         test_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'test_labels.csv'), index = False)
         # EDIT DATASET ATTRIBUTES
         train_dataset.label_file = os.path.join(label_dir, 'train_labels.csv')
+        validation_dataset.label_file = os.path.join(label_dir, 'validation_labels.csv')
         test_dataset.label_file = os.path.join(label_dir, 'test_labels.csv')
-        return train_dataset, test_dataset
+        return train_dataset, validation_dataset, test_dataset
