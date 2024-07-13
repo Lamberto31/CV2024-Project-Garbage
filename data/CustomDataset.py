@@ -180,7 +180,7 @@ class CustomImageDataset(Dataset):
           label = self.target_transform(label)
         return img_file
 
-    def split_train_validation_test(self, anomalous_label = 1, train_ratio = 0.8, validation_ratio = 0.1, label_dir = None, balance = True):
+    def split_train_validation_test(self, anomalous_label = 1, train_ratio = 0.8, validation_ratio = 0.1, label_dir = None, balance = True, non_anomalous_validation = False):
         # This function split the dataset in train, validation and test partition. The train partition will have only non anomalous data.
         # Assign default label directory if not provided
         if not label_dir:
@@ -206,11 +206,14 @@ class CustomImageDataset(Dataset):
           anomalous_validation_imgs_labels = anomalous_imgs_labels.sample(frac = validation_ratio_remaining)
           # Get the remaining part of the non anomalous images and sample validation_ratio on them
           non_anomalous_remaining_validation_imgs_labels = non_anomalous_imgs_labels.drop(train_dataset.imgs_labels.index).sample(frac = validation_ratio_remaining)
-          # Crete validation dataset with the sampled images
+          # Create a validation dataset with only the non anomalous images
+          if non_anomalous_validation:
+            non_anomalous_validation_dataset = copy.deepcopy(self)
+            non_anomalous_validation_dataset.imgs_labels = non_anomalous_remaining_validation_imgs_labels
+          # Create validation dataset with the sampled images
           validation_dataset.imgs_labels = pd.concat([anomalous_validation_imgs_labels, non_anomalous_remaining_validation_imgs_labels])
         else:
           validation_dataset.imgs_labels = validation_dataset.imgs_labels.drop(train_dataset.imgs_labels.index).sample(frac = validation_ratio_remaining)
-
         # TEST DATASET
         # Create test dataset with the remaining data
         test_dataset.imgs_labels = test_dataset.imgs_labels.drop(train_dataset.imgs_labels.index).drop(validation_dataset.imgs_labels.index)
@@ -219,12 +222,17 @@ class CustomImageDataset(Dataset):
         assert len(self.imgs_labels) == len(train_dataset.imgs_labels) + len(validation_dataset.imgs_labels) + len(test_dataset.imgs_labels), "Train, validation and test split is not correct"
         # Check if there is no overlap between train and test images
         assert not bool(set(train_dataset.imgs_labels.iloc[:,0].unique()) & set(validation_dataset.imgs_labels.iloc[:,0].unique()) & set(test_dataset.imgs_labels.iloc[:,0].unique())), "Train, validation and test images overlap"
+        # Check that there is overlap between the two validation datasets
+        if balance & non_anomalous_validation: assert bool(set(non_anomalous_validation_dataset.imgs_labels.iloc[:,0].unique()) & set(validation_dataset.imgs_labels.iloc[:,0].unique())), "Anomalous validation and validation images do not overlap"
         # SAVE NEW LABEL FILES
         train_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'train_labels.csv'), index = False)
+        if balance & non_anomalous_validation: non_anomalous_validation_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'non_anomalous_validation_labels.csv'), index = False)
         validation_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'validation_labels.csv'), index = False)
         test_dataset.imgs_labels.to_csv(os.path.join(label_dir, 'test_labels.csv'), index = False)
         # EDIT DATASET ATTRIBUTES
         train_dataset.label_file = os.path.join(label_dir, 'train_labels.csv')
         validation_dataset.label_file = os.path.join(label_dir, 'validation_labels.csv')
+        if balance & non_anomalous_validation: non_anomalous_validation_dataset.label_file = os.path.join(label_dir, 'non_anomalous_validation_labels.csv')
         test_dataset.label_file = os.path.join(label_dir, 'test_labels.csv')
+        if balance & non_anomalous_validation: return train_dataset, validation_dataset, non_anomalous_validation_dataset, test_dataset
         return train_dataset, validation_dataset, test_dataset
