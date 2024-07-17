@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import math
 import copy
-from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score
 
 
 def rmse(predictions, targets):
@@ -71,6 +71,17 @@ def get_confusion_matrix_list(anomal_scores, labels, threshold_list):
         cm_disp = ConfusionMatrixDisplay(confusion_matrix=cm)
         cm_disp_list.append(cm_disp)
     return cm_list, cm_disp_list
+
+def classify_with_threshold(anomal_scores, labels, threshold):
+    thresholded_scores = np.squeeze(anomal_scores) > threshold
+    labels = np.squeeze(labels, axis=0)
+    cm = confusion_matrix(labels, thresholded_scores)
+    accuracy = accuracy_score(labels, thresholded_scores)
+    precision = precision_score(labels, thresholded_scores)
+    recall = recall_score(labels, thresholded_scores)
+    f1 = f1_score(labels, thresholded_scores)
+    return accuracy, precision, recall, f1, cm
+
 
 def score_sum(list1, list2, alpha):
     list_result = []
