@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 import math
 import copy
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix, ConfusionMatrixDisplay
+
 
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
@@ -56,6 +57,20 @@ def anomaly_score_list_inv(psnr_list):
 def AUC(anomal_scores, labels):
     frame_auc = roc_auc_score(y_true=np.squeeze(labels, axis=0), y_score=np.squeeze(anomal_scores))
     return frame_auc
+
+def get_roc_curve(anomal_scores, labels):
+    fpr, tpr, thresholds = roc_curve(np.squeeze(labels, axis=0), np.squeeze(anomal_scores), pos_label=1)
+    return fpr, tpr, thresholds
+
+def get_confusion_matrix_list(anomal_scores, labels, threshold_list):
+    cm_list = []
+    cm_disp_list = []
+    for threshold in threshold_list:
+        cm = confusion_matrix(np.squeeze(labels, axis=0), np.squeeze(anomal_scores) > threshold)
+        cm_list.append(cm)
+        cm_disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        cm_disp_list.append(cm_disp)
+    return cm_list, cm_disp_list
 
 def score_sum(list1, list2, alpha):
     list_result = []
