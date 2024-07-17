@@ -1,0 +1,10 @@
+absl-py==2.1.0
+grpcio==1.64.1
+Markdown==3.6
+MarkupSafe==2.1.5
+numpy==1.26.4
+protobuf==4.25.3
+six==1.16.0
+tensorboard==2.17.0
+tensorboard-data-server==0.7.2
+Werkzeug==3.0.3
