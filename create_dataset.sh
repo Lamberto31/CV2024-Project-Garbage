@@ -25,7 +25,7 @@ if [ "$response" != "y" ]; then
     exit 1
 fi
 
-# Move files from subdirectories to the output directory
-find "$1" -type f -exec mv {} "$2" \;
+# Move files from subdirectories to the output directory, excluding JSON files
+find "$1" -type f ! -name "*.json" -exec mv {} "$2" \;
 
-echo "All files from subdirectories have been moved to '$2'."
+echo "All files from subdirectories, excluding JSON files, have been moved to '$2'."
