@@ -9,6 +9,12 @@ dataset_dir = './dataset/to_combine/'
 output_dir = './dataset/combined/'
 output_images_dir = output_dir + 'images/'
 dataset_info_file_name = 'datasets_info.json'
+auto_accept = True
+if auto_accept:
+    auto_accept = '-y'
+else:
+    auto_accept = '-n'
+
 
 # Create the DataFrame that will contain all the data
 df = pd.DataFrame(columns=['filename', 'label'])
@@ -84,10 +90,10 @@ for dataset in datasets_info["datasets"]:
             input_file_path = os.path.join(dataset_full_dir, path)
             output_file_path = os.path.join(output_images_dir, path)
             os.system('mkdir -p ' + output_file_path)
-            exit_code = subprocess.Popen(["./create_dataset.sh", input_file_path, output_file_path])
+            exit_code = subprocess.Popen(["./create_dataset.sh", input_file_path, output_file_path, auto_accept])
             exit_code = exit_code.wait()
             # Remove the directory if the exit code is 1
             if exit_code == 1:
                 os.system('rm -r ' + output_file_path)
     else:
-        os.system('bash ./create_dataset.sh ' + dataset_full_dir + ' ' + output_images_dir)
+        os.system('bash ./create_dataset.sh ' + dataset_full_dir + ' ' + output_images_dir + ' ' + auto_accept)
