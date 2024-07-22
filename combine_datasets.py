@@ -1,6 +1,7 @@
 import json
 import os
 import pandas as pd
+import subprocess
 
 
 # Parameters
@@ -83,6 +84,10 @@ for dataset in datasets_info["datasets"]:
             input_file_path = os.path.join(dataset_full_dir, path)
             output_file_path = os.path.join(output_images_dir, path)
             os.system('mkdir -p ' + output_file_path)
-            os.system('bash ./create_dataset.sh ' + input_file_path + ' ' + output_file_path)
+            exit_code = subprocess.Popen(["./create_dataset.sh", input_file_path, output_file_path])
+            exit_code = exit_code.wait()
+            # Remove the directory if the exit code is 1
+            if exit_code == 1:
+                os.system('rm -r ' + output_file_path)
     else:
         os.system('bash ./create_dataset.sh ' + dataset_full_dir + ' ' + output_images_dir)
