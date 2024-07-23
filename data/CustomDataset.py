@@ -127,11 +127,12 @@ class CustomImageDataset(Dataset):
     def adjust_label(self):
         # This function removes rows from the dataframe that do not have corresponding image files
         # Create a list of image names
-        img_names = [os.path.basename(img) for img in glob.glob(self.imgs_dir + "/*")]
+        img_names = [img[len(self.imgs_dir) + 1:] for img in glob.glob(self.imgs_dir + "/**/*", recursive=True)]
         # Remove dataframe rows with image names not in the list
         self.imgs_labels = self.imgs_labels[self.imgs_labels.iloc[:, 0].isin(img_names)]
         # Check if the number of images is equal to the number of labels
-        assert len(self.imgs_labels) <= len(os.listdir(self.imgs_dir)), "Number of images and labels do not match"
+        imgs_count = sum([len(files) for r, d, files in os.walk(self.imgs_dir)])
+        assert len(self.imgs_labels) <= imgs_count, "Number of images and labels do not match"
     
     def set_cv2_resize(self, resize = True, resize_height = 256, resize_width = 256):
         # This function sets the resize parameters if use_cv2 is True
