@@ -5,8 +5,8 @@ import subprocess
 
 
 # Parameters
-dataset_dir = './dataset/to_combine/'
-output_dir = './dataset/combined/'
+dataset_dir = '../dataset/to_combine/'
+output_dir = '../dataset/combined/'
 output_images_dir = output_dir + 'images/'
 dataset_info_file_name = 'datasets_info.json'
 auto_accept = True
