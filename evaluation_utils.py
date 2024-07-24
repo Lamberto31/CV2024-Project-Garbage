@@ -80,7 +80,7 @@ def classify_with_threshold(anomal_scores, labels, threshold):
     precision = precision_score(labels, thresholded_scores)
     recall = recall_score(labels, thresholded_scores)
     f1 = f1_score(labels, thresholded_scores)
-    return accuracy, precision, recall, f1, cm
+    return thresholded_scores, accuracy, precision, recall, f1, cm
 
 
 def score_sum(list1, list2, alpha):
