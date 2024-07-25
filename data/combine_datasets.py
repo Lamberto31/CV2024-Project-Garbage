@@ -97,3 +97,5 @@ for dataset in datasets_info["datasets"]:
                 os.system('rm -r ' + output_file_path)
     else:
         os.system('bash ./create_dataset.sh ' + dataset_full_dir + ' ' + output_images_dir + ' ' + auto_accept)
+    # Clean the dataset directory
+    os.system('rm -r ' + dataset_full_dir + '/*')
