@@ -79,6 +79,9 @@ print(df['label'].value_counts())
 # Save the DataFrame to a csv file
 df.to_csv(output_dir + 'combined_dataset.csv', index=False)
 
+# Create the directory for the images
+os.system('mkdir -p ' + output_images_dir)
+
 # Execute the bash script to create the dataset directory structure
 for dataset in datasets_info["datasets"]:
     # Extract dataset information
