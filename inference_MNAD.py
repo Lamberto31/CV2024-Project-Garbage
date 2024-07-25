@@ -181,8 +181,8 @@ labels_list = np.expand_dims(test_dataset.imgs_labels["label"].to_numpy(), axis=
 
 
 # Classification
-thresholded_score = (np.squeeze(anomaly_score_total_list) > args.threshold).astype(int)
+thresholded_score_list, _, _, _, _, _ = classify_with_threshold(anomaly_score_total_list, labels_list, args.threshold)
 print("Anomaly score:")
 print(np.squeeze(anomaly_score_total_list))
 print("Thresholded score:")
-print(thresholded_score)
+print(np.squeeze(thresholded_score_list))
