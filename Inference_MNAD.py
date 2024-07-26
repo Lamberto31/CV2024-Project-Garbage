@@ -4,6 +4,7 @@ import torch
 import torch.utils.data as data
 import torchvision.transforms as T
 import torch.nn as nn
+import json
 
 from data.CustomDataset import CustomImageDataset
 from data.CustomDataset import augment_dataset
@@ -28,6 +29,8 @@ def classify(image_file_path):
     "m_items_path": "./model/trained",      # directory of memory items
     "m_items_file": "keys.pt",              # name of the memory items file
     "augment": False,                       # whether to use data augmentation
+    "use_custom_min_max": False,            # use custom min and max values for normalization
+    "custom_min_max_file": "min_max.json"   # file with custom min and max for values for normalization
     }
     args = argparse.Namespace(**args_dict)
 
@@ -71,6 +74,16 @@ def classify(image_file_path):
     test_batch = data.DataLoader(test_dataset, batch_size = args.batch_size,
                                 shuffle=True, num_workers=args.num_workers, drop_last=False)
     batch_size = len(test_batch)
+
+    # Load custom min and max values for normalization if required
+    if args.use_custom_min_max:
+        # TEMP
+        min_max_file = os.path.join("./dataset/single/", args.custom_min_max_file)
+        # TEMP_END
+        with open(min_max_file, 'r') as f:
+            min_max = json.load(f)
+    else:
+        min_max = None
 
 
     # DATA AUGMENTATION
@@ -167,8 +180,16 @@ def classify(image_file_path):
     anomaly_score_total_list = []
 
     # Calculating the abnormality score as the sum of the PSNR (inverted) and the feature distance
-    psnr_listed = anomaly_score_list_inv(list(psnr_list.values()))
-    feature_distance_listed = anomaly_score_list(list(feature_distance_list.values()))
+    if args.use_custom_min_max:
+        psnr_listed = anomaly_score_list_inv(list(psnr_list.values()), min_max["psnr_min"], min_max["psnr_max"])
+        feature_distance_listed = anomaly_score_list(list(feature_distance_list.values()), min_max["feature_distance_min"], min_max["feature_distance_max"])
+        # Remove the added values from the two list
+        psnr_listed = psnr_listed[:-2]
+        feature_distance_listed = feature_distance_listed[:-2]
+    else:
+        psnr_listed = anomaly_score_list_inv(list(psnr_list.values()))
+        feature_distance_listed = anomaly_score_list(list(feature_distance_list.values()))
+        
     anomaly_score_total_list = score_sum(psnr_listed, feature_distance_listed, args.alpha)
 
     anomaly_score_total_list = np.asarray(anomaly_score_total_list)
