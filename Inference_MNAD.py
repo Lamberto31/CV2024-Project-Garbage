@@ -192,12 +192,14 @@ def classify(image_file_path):
     if args.use_custom_min_max:
         psnr_listed = psnr_listed[:-2]
         feature_distance_listed = feature_distance_listed[:-2]
-        
+    
+    
     anomaly_score_total_list = score_sum(psnr_listed, feature_distance_listed, args.alpha)
 
     anomaly_score_total_list = np.asarray(anomaly_score_total_list)
-    anomaly_score_total_list = np.mean(anomaly_score_total_list, axis=1)
-    anomaly_score_total_list = np.expand_dims(anomaly_score_total_list, axis=0).T
+    if args.augment:
+        anomaly_score_total_list = np.mean(anomaly_score_total_list, axis=1)
+        anomaly_score_total_list = np.expand_dims(anomaly_score_total_list, axis=0).T
 
     #print(anomaly_score_total_list.shape)
     #print(anomaly_score_total_list)
