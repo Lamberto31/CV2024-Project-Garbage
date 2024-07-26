@@ -26,7 +26,8 @@ def classify(image_file_path):
     "model_path": "./model/trained",        # directory of model
     "model_file": "model.pth",              # name of the model file
     "m_items_path": "./model/trained",      # directory of memory items
-    "m_items_file": "keys.pt"               # name of the memory items file
+    "m_items_file": "keys.pt",              # name of the memory items file
+    "augment": False,                       # whether to use data augmentation
     }
     args = argparse.Namespace(**args_dict)
 
@@ -73,33 +74,34 @@ def classify(image_file_path):
 
 
     # DATA AUGMENTATION
-    # Create augmentation transform list
-    augmentation_transform_list = []
+    if args.augment:
+        # Create augmentation transform list
+        augmentation_transform_list = []
 
-    enabled = True
-    if enabled:
-        augmentation_transform = T.Compose([
-            T.ToPILImage(),
-            T.RandAugment(),
-            T.ToTensor(),    
-        ])
-        transform_name = "RandAugment"
-        applications_number = 3
-        transform_dict = {"name": transform_name, "transform": augmentation_transform, "applications_number": applications_number}
-        augmentation_transform_list.append(transform_dict)
+        enabled = True
+        if enabled:
+            augmentation_transform = T.Compose([
+                T.ToPILImage(),
+                T.RandAugment(),
+                T.ToTensor(),    
+            ])
+            transform_name = "RandAugment"
+            applications_number = 3
+            transform_dict = {"name": transform_name, "transform": augmentation_transform, "applications_number": applications_number}
+            augmentation_transform_list.append(transform_dict)
 
 
-    # Apply augment_dataset function to create augmented dataset
-    augmented_test_dataset = augment_dataset(test_dataset, augmentation_transform_list, create_dict=False)
-    augmented_test_size = len(augmented_test_dataset)
+        # Apply augment_dataset function to create augmented dataset
+        augmented_test_dataset = augment_dataset(test_dataset, augmentation_transform_list, create_dict=False)
+        augmented_test_size = len(augmented_test_dataset)
 
-    augmented_test_batch = data.DataLoader(augmented_test_dataset, batch_size = args.batch_size,
-                                shuffle=True, num_workers=args.num_workers, drop_last=False)
-    augmented_batch_size = len(augmented_test_batch)
+        augmented_test_batch = data.DataLoader(augmented_test_dataset, batch_size = args.batch_size,
+                                    shuffle=True, num_workers=args.num_workers, drop_last=False)
+        augmented_batch_size = len(augmented_test_batch)
 
-    test_batch = augmented_test_batch
+        test_batch = augmented_test_batch
 
-    #show_augmented_dataset_info(augmented_test_dataset)
+        #show_augmented_dataset_info(augmented_test_dataset)
 
 
 
