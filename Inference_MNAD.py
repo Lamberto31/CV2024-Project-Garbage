@@ -29,7 +29,7 @@ def classify(image_file_path):
     "m_items_path": "./model/trained",      # directory of memory items
     "m_items_file": "keys.pt",              # name of the memory items file
     "augment": False,                       # whether to use data augmentation
-    "use_custom_min_max": False,            # use custom min and max values for normalization
+    "use_custom_min_max": True,            # use custom min and max values for normalization
     "custom_min_max_file": "min_max.json"   # file with custom min and max for values for normalization
     }
     args = argparse.Namespace(**args_dict)
