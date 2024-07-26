@@ -180,15 +180,18 @@ def classify(image_file_path):
     anomaly_score_total_list = []
 
     # Calculating the abnormality score as the sum of the PSNR (inverted) and the feature distance
+    psnr_listed = list(psnr_list.values())
+    feature_distance_listed = list(feature_distance_list.values())
     if args.use_custom_min_max:
-        psnr_listed = anomaly_score_list_inv(list(psnr_list.values()), min_max["psnr_min"], min_max["psnr_max"])
-        feature_distance_listed = anomaly_score_list(list(feature_distance_list.values()), min_max["feature_distance_min"], min_max["feature_distance_max"])
-        # Remove the added values from the two list
+        psnr_listed.extend([min_max["psnr_min"], min_max["psnr_max"]])
+        feature_distance_listed.extend([min_max["feature_distance_min"], min_max["feature_distance_max"]])
+    psnr_listed = anomaly_score_list_inv(psnr_listed)
+    feature_distance_listed = anomaly_score_list(feature_distance_listed)
+
+    # Remove the added values from the two list if custom min and max values are used
+    if args.use_custom_min_max:
         psnr_listed = psnr_listed[:-2]
         feature_distance_listed = feature_distance_listed[:-2]
-    else:
-        psnr_listed = anomaly_score_list_inv(list(psnr_list.values()))
-        feature_distance_listed = anomaly_score_list(list(feature_distance_list.values()))
         
     anomaly_score_total_list = score_sum(psnr_listed, feature_distance_listed, args.alpha)
 
