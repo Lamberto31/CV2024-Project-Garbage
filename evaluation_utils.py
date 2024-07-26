@@ -75,7 +75,8 @@ def get_confusion_matrix_list(anomal_scores, labels, threshold_list):
 def classify_with_threshold(anomal_scores, labels, threshold):
     thresholded_scores = np.squeeze(anomal_scores) > threshold
     # Ensure that the thresholded_scores is a numpy array
-    thresholded_scores = np.array([thresholded_scores], dtype=int)
+    if not isinstance(thresholded_scores, np.ndarray):
+        thresholded_scores = np.array([thresholded_scores], dtype=int)
     labels = np.squeeze(labels, axis=0)
     cm = confusion_matrix(labels, thresholded_scores)
     accuracy = accuracy_score(labels, thresholded_scores)
